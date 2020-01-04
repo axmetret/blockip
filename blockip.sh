@@ -9,16 +9,21 @@
 PATH1="$HOME/findip"
 VAR="$PATH1/ip.allow"
 FND="$PATH1/findip.txt"
-
+VER="$(uname -r)"
 func_create () {
 	mkdir $PATH1 # Create dir save find ip
-	touch $PATH1/ip.allow # Create file permition ip-addresses
+	touch $VAR # Create file permition ip-addresses
 
 	func_find
 }
 
 func_find () { 
-	awk '{print $12}' /var/log/syslog | grep 'SRC' > $PATH1/.sortip # Sorting addresses
+	if [[ $VER == '2.4.32-vniins42' ]] ; then 
+		awk '{print $11}' /var/log/messages | grep 'SRC' > $PATH/.sortip # For MCBC 3.0
+	else
+		awk '{print $12}' /var/log/syslog | grep 'SRC' > $PATH1/.sortip # Sorting addresses
+	fi
+
 	sed 's/SRC=//' $PATH1/.sortip > $PATH1/sortip # Editing SRC=192.168.1.1 > 192.168.1.1
 	sort $PATH1/sortip | uniq > $PATH1/findip.txt # Deleting duplicate address
 
