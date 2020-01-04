@@ -9,17 +9,19 @@
 PATH1="$HOME/findip"
 VAR="$PATH1/ip.allow"
 FND="$PATH1/findip.txt"
-VER="$(uname -r)"
+VER="$(uname -r)" # Version kernel linux
+
 func_create () {
 	mkdir $PATH1 # Create dir save find ip
 	touch $VAR # Create file permition ip-addresses
+	iptbles -I INPUT 1 -p icmp --icmp-type 8 -m state --state NEW,ESTABLISHED,RELATED -j LOG --log-level=1 --log-prefix "Ping-request: " # Adding rule alert
 
 	func_find
 }
 
 func_find () { 
 	if [[ $VER == '2.4.32-vniins42' ]] ; then 
-		awk '{print $11}' /var/log/messages | grep 'SRC' > $PATH/.sortip # For MCBC 3.0
+		awk '{print $11}' /var/log/messages | grep 'SRC' > $PATH1/.sortip # For MCBC 3.0
 	else
 		awk '{print $12}' /var/log/syslog | grep 'SRC' > $PATH1/.sortip # Sorting addresses
 	fi
@@ -45,6 +47,7 @@ func_sort () { # I can't compare the lines of two files, i cloud think of only t
 	done
 
 	if [[ -n $PATH1/badip.txt ]] ; then # If the file exists, then "continue", if "not" then do nothing
+
 		func_add
 	fi
 }
@@ -58,7 +61,7 @@ func_add () {
 }
 
 func_del () {
-	rm .* str_* $PATH1 # Delite temp
+	rm .* str_* sortip* $PATH1 # Delite temp
 }
 
 func_start () { 
