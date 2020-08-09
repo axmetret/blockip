@@ -5,18 +5,52 @@
 #
 # Start only ROOT
 #
+#!/usr/bin/env bash
+#
 # Constants
 PATH1="$HOME/findip"
 VAR="$PATH1/ip.allow"
 FND="$PATH1/findip.txt"
 VER="$(uname -r)" # Version kernel linux
+RUL='iptables -I INPUT 1 -p icmp --icmp-type 8 -m state --state NEW,ESTABLISHED,RELATED -j LOG --log-level=1 --log-prefix "Ping-request: "'
+IPT="bee50a4ed019759713f09d1a9c026d7c"
+#
+#
+# Funcion for creating a rule in iptables
+func_check_file () {
+	if [[ -d $PATH1 ]]
+	then
+		echo "0" # True
+		if [[ -e $VAR ]] 
+ 
+			then echo "0"  # True
+		else
+			touch $VAR $>> errlog.txt # Create file permition ip-addr
+		fi
+	else
+		mkdir $PATH1 $>> errlog.txt # Create dir save find ip-addr
+		touch $VAR 
+		if  (( $? ))
+		then 
+			echo "I don't creating" >> errlog.txt
+		fi
+	fi
+	func_check_rule
+}
+#
+func_check_rule () {
 
-func_create () {
-	mkdir $PATH1 # Create dir save find ip
-	touch $VAR # Create file permition ip-addresses
-	iptbles -I INPUT 1 -p icmp --icmp-type 8 -m state --state NEW,ESTABLISHED,RELATED -j LOG --log-level=1 --log-prefix "Ping-request: " # Adding rule alert
-
-	func_find
+	iptables -L | grep "Ping request:" > rule | md5sum rule > md5sum
+	
+	if [[ $IPT -eq $md5sum ]]
+	then
+		echo "0" # True 
+		rm -f rule md5sum # clear temp
+	else
+		$RUL $>> errlog.txt
+		rm -f rule md5sum # -//-
+	fi
+#func_find
 }
 
 func_find () { 
@@ -72,4 +106,5 @@ func_start () {
 	fi
 }
 
-func_start
+func_check_file
+#func_start
